@@ -2,48 +2,57 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class DataSaver {
 
     public static void main(String[] args) {
+
+        Scanner in = new Scanner(System.in);
         ArrayList<String> records = new ArrayList<>();
-        boolean keepGoing = true;
 
         System.out.println("=== DataSaver CSV Builder ===");
 
-        while (keepGoing) {
-            String first = SafeInput.getNonZeroLenString("Enter First Name");
-            String last = SafeInput.getNonZeroLenString("Enter Last Name");
+        boolean more = true;
 
-            String id = SafeInput.getRegExString("Enter ID (numeric)", "\\d+");
-            id = String.format("%06d", Integer.parseInt(id));
+        while (more) {
+            // Get data using YOUR SafeInput methods
+            String first = SafeInput.getNonZeroLenString(in, "Enter First Name");
+            String last = SafeInput.getNonZeroLenString(in, "Enter Last Name");
 
-            String email = SafeInput.getNonZeroLenString("Enter Email");
-            int birthYear = SafeInput.getRangedInt("Enter Year of Birth", 1900, 2050);
+            // ID must be digits → SafeInput.getRegExString
+            String id = SafeInput.getRegExString(in, "Enter Numeric ID", "\\d+");
+            id = String.format("%06d", Integer.parseInt(id));   // zero-padded to 6 digits
 
+            String email = SafeInput.getNonZeroLenString(in, "Enter Email");
+            int birthYear = SafeInput.getRangedInt(in, "Enter Year of Birth", 1900, 2050);
+
+            // Build CSV record
             String record = first + ", " + last + ", " + id + ", " + email + ", " + birthYear;
+
             records.add(record);
 
-            keepGoing = SafeInput.getYNConfirm("Add another record?");
+            more = SafeInput.getYNConfirm(in, "Add another record?");
         }
 
-        String filename = SafeInput.getNonZeroLenString("Enter output filename (without extension)");
+        // Ask for output filename
+        String filename = SafeInput.getNonZeroLenString(in, "Enter file name (without extension)");
         filename = "src/" + filename + ".csv";
 
-        try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
-
+        // Write CSV to file
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
             for (String r : records) {
                 writer.write(r);
                 writer.newLine();
             }
-
-            writer.close();
-            System.out.println("\nSaved " + records.size() + " records to: " + filename);
+            System.out.println("\nSuccessfully saved " + records.size()
+                    + " records to: " + filename);
 
         } catch (IOException e) {
-            System.out.println("Error saving the file.");
+            System.out.println("Error saving file.");
             e.printStackTrace();
         }
+
+        in.close();
     }
 }
